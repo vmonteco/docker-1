@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+docker container inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' overlord

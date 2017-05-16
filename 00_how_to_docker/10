@@ -4,7 +4,7 @@ set -x
 
 MACHINE_NAME=Char
 VOLUME_NAME=hatchery
-VOLUME_HOST_PATH=./hatchery
+VOLUME_HOST_PATH=$(pwd)/hatchery
 VOLUME_GUEST_PATH=/hatchery
 
 if [[ $(docker-machine status $MACHINE_NAME ) == "Running" ]]; then

@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-docker run --rm -d -e WORDPRESS_DB_HOST=192.168.99.101:32775 -e WORDPRESS_DB_PASSWORD='Kerrigan' --name lair -p 8080:80 wordpress
+docker run --rm -d -e WORDPRESS_DB_HOST=$(docker-machine ip Char):32775 -e WORDPRESS_DB_PASSWORD='Kerrigan' --name lair -p 8080:80 wordpress

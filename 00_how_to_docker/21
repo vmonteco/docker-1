@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+docker-machine create --driver virtualbox Aiur

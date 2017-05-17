@@ -1,3 +1,6 @@
 #!/usr/bin/env sh
 
-docker run --restart always -e MYSQL_ROOT_PASSWORD=Kerrigan,MYSQL_DATABASE=zerglings --name spawning-pool -d -v /hatchery:/var/lib/mysql mysql
+# NB : hatchery directory must be empty
+docker run --restart "on-failure" -e MYSQL_ROOT_PASSWORD=Kerrigan -e MYSQL_DATABASE=zerglings -d -v /hatchery:/var/lib/mysql  -p 32775:3306 --name spawning-pool mysql
+
+# To connect : mysql -uroot -p'Kerrigan' -h 192.168.99.101 -P 32775

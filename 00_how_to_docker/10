@@ -2,7 +2,7 @@
 
 set -x
 
-MACHINE_NAME=Char
+MACHINE_NAME=$1
 VOLUME_NAME=hatchery
 VOLUME_HOST_PATH=$(pwd)/hatchery
 VOLUME_GUEST_PATH=/hatchery
@@ -22,6 +22,6 @@ echo "Restarting machine :"
 docker-machine start $MACHINE_NAME
 
 echo "Mounting volume in docker machine :"
-docker-machine ssh $MACHINE_NAME "sudo mkdir $VOLUME_GUEST_PATH; sudo mount -t vboxsf $VOLUME_NAME $VOLUME_GUEST_PATH"
+docker-machine ssh $MACHINE_NAME "sudo mkdir $VOLUME_GUEST_PATH; sudo mount -t vboxsf -o uid=999,gid=50 $VOLUME_NAME $VOLUME_GUEST_PATH"
 echo "Done."
 

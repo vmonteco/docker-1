@@ -1,6 +1,6 @@
-MAINTAINER <vmonteco:vmonteco@student.42.fr>
 FROM alpine
+MAINTAINER <vmonteco:vmonteco@student.42.fr>
 
 RUN apk update && apk add emacs
 
-CMD emacs
+CMD ["emacs"]

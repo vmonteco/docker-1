@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
 
-docker run --rm --name Abathur -p 3000:3000 -d --expose 3000 -v /Users/vmonteco/Draft/flask:/opt/flask frolvlad/alpine-python2 sh -c "pip2 install flask && /opt/flask/hello_world.py"
+docker run --rm --name Abathur -p 3000:3000 -d --expose 3000 -v /Users/vmonteco/Draft/flask:/root smartfinn/python sh -c "pip install flask && /root/hello_world.py"

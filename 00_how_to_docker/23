@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+docker-machine ssh Char "docker network create --driver overlay overmind"

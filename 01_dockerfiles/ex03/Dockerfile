@@ -1,0 +1,5 @@
+FROM alpine
+LABEL maintainer "vmonteco@student.42.fr"
+
+RUN apk update && apk add mysql git nginx go 
+

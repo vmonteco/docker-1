@@ -10,13 +10,14 @@ services:
   gogs:
     build: .
     environment:
+      - RUN_USER=git
       - USER=git
     volumes:
       - /shared/misc/gogs_conf:/go/src/github.com/gogits/gogs/custom/conf
       - /shared/git/gogs:/srv/git
       - /shared/logs/gogs:/go/src/github.com/gogits/gogs/log
     ports:
-      - "10022:22"
-      - "10080:3000"
+      - "10022:10022"
+      - "10080:10080"
     depends_on:
       - db

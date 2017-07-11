@@ -6,7 +6,9 @@ services:
       - MYSQL_ROOT_PASSWORD=sqlpwd
       - MYSQL_DATABASE=gogs
     volumes:
-      - /DB/gogs:/var/lib/mysql
+      #- /Users/vmonteco/Code/Docker/DB/gogs:/var/lib/mysql
+      #- /DB/gogs:/var/lib/mysql
+      - /db_shared/gogs:/var/lib/mysql
   gogs:
     build: .
     environment:
@@ -17,7 +19,9 @@ services:
       - /shared/git/gogs:/srv/git
       - /shared/logs/gogs:/go/src/github.com/gogits/gogs/log
     ports:
-      - "10022:10022"
-      - "10080:10080"
+      - "10022:22"
+      - "10080:3000"
     depends_on:
       - db
+    stdin_open: true
+    tty: true

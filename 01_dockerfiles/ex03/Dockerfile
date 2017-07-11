@@ -1,22 +1,27 @@
-FROM debian
-LABEL maintainer "vmonteco@student.42.fr"
+FROM golang:alpine
+MAINTAINER <vmonteco@student.42.fr>
 
-RUN apt-get update -y && apt-get install -y sqlite3 git nginx bash wget gcc make
-RUN adduser --disabled-login --gecos 'Gogs' git
-USER git
-WORKDIR /home/git
-RUN mkdir local
-RUN wget https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz
-RUN tar -C /home/git/local -xzf go1.8.3.linux-amd64.tar.gz && rm go1.8.3.linux-amd64.tar.gz
-ENV GOROOT=/home/git/local/go GOPATH=/home/git/go
-ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+RUN apk update &&  apk add git gcc make bash openssh openssh-client libcap sqlite
 RUN mkdir -p $GOPATH/src/github.com/gogits
-WORKDIR $GOPATH/src/github.com/gogits
-RUN git clone --depth=1 -b develop https://github.com/gogits/gogs && cd gogs && go build -tags "sqlite"
-USER root
-RUN systemctl enable /home/git/go/src/github.com/gogits/gogs/scripts/systemd/gogs.service
+RUN cd $GOPATH/src/github.com/gogits && git clone --depth=1 -b develop https://github.com/gogits/gogs
+WORKDIR  $GOPATH/src/github.com/gogits/gogs
+RUN go build
+RUN adduser -H -D -u 5993 git -h /srv/git -s /bin/bash && passwd -u git
+RUN mkdir /srv/git
+RUN mkdir /go/src/github.com/gogits/gogs/log
+RUN chown 5993:4207 /srv/git
+RUN chown 5993:4207 /go/src/github.com/gogits/gogs/log
+RUN chmod -Rv 770 /srv/git
+RUN chmod -Rv 770 /go/src/github.com/gogits/gogs/log
+#VOLUME /srv/git
+RUN mkdir -p $GOPATH/src/github.com/gogits/gogs/custom/conf
+RUN mkdir $GOPATH/src/github.com/gogits/gogs/data
+RUN chown -Rv 5993:4207 $GOPATH/src/github.com/gogits/gogs
+RUN chmod -Rv 700 $GOPATH/src/github.com/gogits/gogs/custom
+RUN setcap 'cap_net_bind_service=+ep' $GOPATH/src/github.com/gogits/gogs/gogs
 USER git
-RUN mkdir /home/git/gogs-repositories
-WORKDIR $GOPATH/src/github.com/gogits/gogs
-EXPOSE 80 3000
-CMD ['/home/git/go/src/github.com/gogits/gogs/gogs', 'web']
+# app.ini $GOPATH/src/github.com/gogits/gogs/custom/conf/app.ini
+EXPOSE 3000
+EXPOSE 22
+CMD ["./gogs", "web"]
+#CMD ["bash"]

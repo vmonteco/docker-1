@@ -1,0 +1,11 @@
+---
+version: '3'
+services:
+  minecraft:
+    image: minecraft
+    build:
+      context: .
+    volumes:
+      - "/Users/vmonteco/Volumes/minecraft_world:/home/minecraft/world"
+    ports:
+      - "25565:25565"

@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-eval "$(docker-machine env char)"
+eval "$(docker-machine env Char)"

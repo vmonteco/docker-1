@@ -1,4 +1,3 @@
 #!/usr/bin/env sh
 
-
-docker run --rm --name Abathur -p 3000:3000 -d --expose 3000 -v /Users/vmonteco/Draft/flask:/root smartfinn/python sh -c "pip install flask && /root/hello_world.py"
+docker run --rm --name Abathur -p 3000:3000 -d --expose 3000 -v "$(pwd):/root" python:2-slim sh -c "pip install flask && FLASK_APP=/root/hello_world.py flask run --port=3000 --host=0.0.0.0"

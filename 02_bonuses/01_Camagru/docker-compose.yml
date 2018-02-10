@@ -1,0 +1,38 @@
+version: '2'
+services:
+  db:
+    build:
+      context: services/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpwd
+      - MYSQL_USER=camagru
+      - MYSQL_PASSWORD=camagrupwd
+      - MYSQL_DATABASE=camagru
+    volumes:
+      - /Users/vmonteco/Volumes/camagru_DB:/var/lib/mysql
+  nginx:
+    build:
+      context: services/nginx
+    volumes:
+      - /Users/vmonteco/Volumes/camagru_media:/var/www/media:ro
+      - ./static:/var/www/static:ro
+      - ./services/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./:/var/www/html:ro
+    ports:
+      - "10080:80"
+      - "10443:443"
+    depends_on:
+      - camagru
+    links:
+      - camagru
+  camagru:
+    build:
+      context: services/camagru
+    links:
+      - db
+    volumes:
+      - /Users/vmonteco/Volumes/camagru_media:/var/www/media
+      - ./static:/var/www/static:ro
+      - .:/var/www/html:ro
+    depends_on:
+      - db

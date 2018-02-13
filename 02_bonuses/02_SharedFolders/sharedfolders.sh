@@ -4,9 +4,9 @@
 # /!\ /!\ You may want to run #11 first in order to compare /!\ /!\
 
 MACHINE_NAME=Char
-VOLUME_NAME=hatchery
-VOLUME_HOST_PATH=$(pwd)/hatchery
-VOLUME_GUEST_PATH=/hatchery
+VOLUME_NAME=hatchery_bis
+VOLUME_HOST_PATH=$(pwd)/hatchery_bis
+VOLUME_GUEST_PATH=/hatchery_bis
 
 if [[ $(docker-machine status $MACHINE_NAME ) == "Running" ]]; then
    echo "Stopping $MACHINE_NAME docker machine.";

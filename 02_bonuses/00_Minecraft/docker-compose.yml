@@ -6,6 +6,6 @@ services:
     build:
       context: .
     volumes:
-      - "/Users/vmonteco/Volumes/minecraft_world:/home/minecraft/world"
+      - "/home/vmonteco/Volumes/minecraft_world:/home/minecraft/world"
     ports:
       - "25565:25565"

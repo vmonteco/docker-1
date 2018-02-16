@@ -1,27 +1,40 @@
-FROM golang:alpine
+FROM ubuntu
 MAINTAINER <vmonteco@student.42.fr>
 
-RUN apk update &&  apk add git gcc make bash openssh openssh-client libcap sqlite
-RUN mkdir -p $GOPATH/src/github.com/gogits
-RUN cd $GOPATH/src/github.com/gogits && git clone --depth=1 -b develop https://github.com/gogits/gogs
-WORKDIR  $GOPATH/src/github.com/gogits/gogs
-RUN go build
-RUN adduser -H -D -u 5993 git -h /srv/git -s /bin/bash && passwd -u git
-RUN mkdir /srv/git
-RUN mkdir /go/src/github.com/gogits/gogs/log
-RUN chown 5993:4207 /srv/git
-RUN chown 5993:4207 /go/src/github.com/gogits/gogs/log
-RUN chmod -Rv 770 /srv/git
-RUN chmod -Rv 770 /go/src/github.com/gogits/gogs/log
-#VOLUME /srv/git
-RUN mkdir -p $GOPATH/src/github.com/gogits/gogs/custom/conf
-RUN mkdir $GOPATH/src/github.com/gogits/gogs/data
-RUN chown -Rv 5993:4207 $GOPATH/src/github.com/gogits/gogs
-RUN chmod -Rv 700 $GOPATH/src/github.com/gogits/gogs/custom
-RUN setcap 'cap_net_bind_service=+ep' $GOPATH/src/github.com/gogits/gogs/gogs
-USER git
-# app.ini $GOPATH/src/github.com/gogits/gogs/custom/conf/app.ini
-EXPOSE 3000
-EXPOSE 22
-CMD ["./gogs", "web"]
-#CMD ["bash"]
+RUN apt-get update -y \
+	&& apt-get upgrade -y \
+	&& apt-get install -y sudo curl \
+	&& bash -c "debconf-set-selections <<< \"postfix postfix/mailname string localhost\" \
+ 	&& debconf-set-selections <<< \"postfix postfix/main_mailer_type string 'Internet Site'\" \
+ 	&& apt-get install -y postfix" \
+	&& apt-get install -y postfix \
+	&& curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash \
+	&& EXTERNAL_URL="http://localhost" apt-get install -y gitlab-ee
+	
+
+
+
+# RUN apt-get update -y \
+# 	&& apt-get upgrade -y \
+# 	&& apt-get install -y sudo build-essential zlib1g-dev libyaml-dev \
+# 	libssl-dev libgdbm-dev libre2-dev libreadline-dev libncurses5-dev \
+# 	libffi-dev curl openssh-server checkinstall libxml2-dev libxslt-dev \
+# 	libcurl4-openssl-dev libicu-dev logrotate rsync python2.7 \
+# 	python-docutils pkg-config cmake git-core
+
+# RUN bash -c "debconf-set-selections <<< \"postfix postfix/mailname string localhost\" \
+# 	&& debconf-set-selections <<< \"postfix postfix/main_mailer_type string 'Internet Site'\" \
+# 	&& apt-get install -y postfix"
+# RUN mkdir /tmp/ruby
+# WORKDIR /tmp/ruby
+# RUN curl --progress ftp://ftp.ruby-lang.org/pub/ruby/2.0/ruby-2.0.0-p353.tar.gz | tar xz
+# WORKDIR /tmp/ruby/ruby-2.0.0-p353
+# RUN ./configure --disable-install-rdoc && make && make install
+# RUN gem install bundler --no-ri --no-rdoc
+# RUN adduser --disabled-login --gecos 'GitLab' git
+# WORKDIR /home/git/
+# RUN sudo -u git -H git clone https://github.com/gitlabhq/gitlab-shell.git -b v1.8.0
+# WORKDIR gitlab-shell
+# RUN sudo -u git -H cp config.yml.example config.yml
+
+

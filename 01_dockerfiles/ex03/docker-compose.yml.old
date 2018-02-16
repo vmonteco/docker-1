@@ -1,0 +1,27 @@
+version: '3'
+services:
+  db:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=sqlpwd
+      - MYSQL_DATABASE=gogs
+    volumes:
+      #- /Users/vmonteco/Code/Docker/DB/gogs:/var/lib/mysql
+      #- /DB/gogs:/var/lib/mysql
+      - /db_shared/gogs:/var/lib/mysql
+  gogs:
+    build: .
+    environment:
+      - RUN_USER=git
+      - USER=git
+    volumes:
+      - /shared/misc/gogs_conf:/go/src/github.com/gogits/gogs/custom/conf
+      - /shared/git/gogs:/srv/git
+      - /shared/logs/gogs:/go/src/github.com/gogits/gogs/log
+    ports:
+      - "10022:22"
+      - "10080:3000"
+    depends_on:
+      - db
+    stdin_open: true
+    tty: true

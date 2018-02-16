@@ -4,20 +4,18 @@ services:
     image: mysql
     environment:
       - MYSQL_ROOT_PASSWORD=sqlpwd
-      - MYSQL_DATABASE=gogs
+      - MYSQL_DATABASE=github
     volumes:
-      #- /Users/vmonteco/Code/Docker/DB/gogs:/var/lib/mysql
-      #- /DB/gogs:/var/lib/mysql
-      - /db_shared/gogs:/var/lib/mysql
-  gogs:
+      - gitlab_db:/var/lib/mysql
+  gitlab:
     build: .
     environment:
       - RUN_USER=git
       - USER=git
     volumes:
-      - /shared/misc/gogs_conf:/go/src/github.com/gogits/gogs/custom/conf
-      - /shared/git/gogs:/srv/git
-      - /shared/logs/gogs:/go/src/github.com/gogits/gogs/log
+      #- gitlab_conf:/go/src/github.com/gogits/gogs/custom/conf
+      - gitlab_git:/srv/git
+      #- gitlab_log:/go/src/github.com/gogits/gogs/log
     ports:
       - "10022:22"
       - "10080:3000"
@@ -25,3 +23,9 @@ services:
       - db
     stdin_open: true
     tty: true
+
+volumes:
+  gitlab_db:
+  gitlab_conf:
+  gitlab_git:
+  gitlab_log:

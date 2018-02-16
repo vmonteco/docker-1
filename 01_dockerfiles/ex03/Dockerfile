@@ -1,27 +1,45 @@
-FROM golang:alpine
-MAINTAINER <vmonteco@student.42.fr>
+FROM ubuntu
 
-RUN apk update &&  apk add git gcc make bash openssh openssh-client libcap sqlite
-RUN mkdir -p $GOPATH/src/github.com/gogits
-RUN cd $GOPATH/src/github.com/gogits && git clone --depth=1 -b develop https://github.com/gogits/gogs
-WORKDIR  $GOPATH/src/github.com/gogits/gogs
-RUN go build
-RUN adduser -H -D -u 5993 git -h /srv/git -s /bin/bash && passwd -u git
-RUN mkdir /srv/git
-RUN mkdir /go/src/github.com/gogits/gogs/log
-RUN chown 5993:4207 /srv/git
-RUN chown 5993:4207 /go/src/github.com/gogits/gogs/log
-RUN chmod -Rv 770 /srv/git
-RUN chmod -Rv 770 /go/src/github.com/gogits/gogs/log
-#VOLUME /srv/git
-RUN mkdir -p $GOPATH/src/github.com/gogits/gogs/custom/conf
-RUN mkdir $GOPATH/src/github.com/gogits/gogs/data
-RUN chown -Rv 5993:4207 $GOPATH/src/github.com/gogits/gogs
-RUN chmod -Rv 700 $GOPATH/src/github.com/gogits/gogs/custom
-RUN setcap 'cap_net_bind_service=+ep' $GOPATH/src/github.com/gogits/gogs/gogs
-USER git
-# app.ini $GOPATH/src/github.com/gogits/gogs/custom/conf/app.ini
-EXPOSE 3000
-EXPOSE 22
-CMD ["./gogs", "web"]
-#CMD ["bash"]
+RUN apt-get update -y \
+	&& apt-get upgrade -y \
+	&& apt-get install -y sudo curl ca-certificates build-essential \
+	zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libre2-dev libreadline-dev \
+	libncurses5-dev libffi-dev curl openssh-server checkinstall libxml2-dev \
+	libxslt-dev libcurl4-openssl-dev libicu-dev logrotate rsync \
+	python-docutils pkg-config cmake git-core \
+	&& bash -c "debconf-set-selections <<< \"postfix postfix/mailname string localhost\"" \
+	&& bash -c "debconf-set-selections <<< \"postfix postfix/main_mailer_type string 'Internet Site'\"" \
+	&& apt-get install -y postfix
+
+RUN mkdir /tmp/ruby
+WORKDIR /tmp/ruby
+RUN curl --remote-name --progress --progress https://cache.ruby-lang.org/pub/ruby/2.3/ruby-2.3.6.tar.gz \
+	&& echo '4e6a0f828819e15d274ae58485585fc8b7caace0  ruby-2.3.6.tar.gz' | shasum -c - \
+	&& tar xzf ruby-2.3.6.tar.gz
+WORKDIR /tmp/ruby/ruby-2.3.6
+RUN ./configure --disable-install-rdoc && make && make install
+RUN gem install bundler --no-ri --no-rdoc
+
+RUN mkdir /tmp/go
+WORKDIR /tmp/go
+RUN curl --remote-name --progress https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz \
+	&& echo '1862f4c3d3907e59b04a757cfda0ea7aa9ef39274af99a784f5be843c80c6772  go1.8.3.linux-amd64.tar.gz' | shasum -a256 -c - \
+	&& tar -C /usr/local -xzf go1.8.3.linux-amd64.tar.gz \
+	&& ln -sf /usr/local/go/bin/{go,godoc,gofmt} /usr/local/bin/ \
+	&& rm go1.8.3.linux-amd64.tar.gz
+
+RUN curl --location https://deb.nodesource.com/setup_7.x | sudo bash - \
+	&& sudo apt-get install -y nodejs \
+	&& curl --silent --show-error https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
+	&& echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list \
+	&& sudo apt-get update -y \
+	&& sudo apt-get install -y yarn
+	
+RUN adduser --disabled-login --gecos 'GitLab' git
+
+WORKDIR /home/git
+RUN sudo -u git -H git clone https://gitlab.com/gitlab-org/gitlab-ce.git -b 10-5-stable gitlab
+
+WORKDIR /home/git/gitlab
+RUN sudo -u git -H cp  config/gitlab.yml.example config/gitlab.yml
+

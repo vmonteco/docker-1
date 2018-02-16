@@ -4,10 +4,3 @@
 docker run --restart "on-failure" -e MYSQL_ROOT_PASSWORD=Kerrigan -e MYSQL_DATABASE=zerglings -d -v hatchery:/var/lib/mysql  -p 32775:3306 --name spawning-pool mysql
 
 # To connect : mysql -uroot -p'Kerrigan' -h $(docker-machine ip Char) -P 32775 zerglings
-# For some reasons this container sometimes crashes on OSX/docker-machine installations.
-# This is related to aio_write function. https://github.com/docker-library/mysql/issues/371
-# The only workaround I found in such cases is to use the following Dockerfile :
-
-# FROM mysql
-# 
-# RUN usermod -u 1000 mysql && echo "innodb_use_native_aio=0" >> /etc/mysql/conf.d/docker.cnf

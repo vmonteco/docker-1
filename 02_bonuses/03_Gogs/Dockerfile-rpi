@@ -1,0 +1,16 @@
+FROM aarch64/debian
+LABEL maintainer "vmonteco@student.42.fr"
+
+RUN apt-get update -y && apt-get install -y sqlite3 git nginx bash
+RUN adduser --disabled-login --gecos 'Gogs' git
+WORKDIR /home/git
+RUN mkdir local
+ADD https://storage.googleapis.com/golang/go1.8.linux-armv6l.tar.gz go.tar.gz
+RUN ls -la
+RUN tar -C /home/git/local -xzf go.tar.gz
+RUN chown -Rv git /home/git && chmod -Rv 700 /home/git/
+ENV GOROOT=/home/git/local/go GOPATH=/home/git/go
+ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+#RUN go get -u github.com/gogits/gogs
+#WORKDIR /home/git/go/src/github.com/gogits/gogs
+#RUN go build

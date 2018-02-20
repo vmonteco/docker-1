@@ -4,6 +4,8 @@ services:
     image: mysql
     environment:
       - MYSQL_ROOT_PASSWORD=sqlpwd
+      - MYSQL_USER=git
+      - MYSQL_PASSWORD=gitlabpwd
       - MYSQL_DATABASE=gitlab
     volumes:
       - gitlab_db:/var/lib/mysql

@@ -6,7 +6,16 @@ RUN apt-get update -y \
 	zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libre2-dev libreadline-dev \
 	libncurses5-dev libffi-dev curl openssh-server checkinstall libxml2-dev \
 	libxslt-dev libcurl4-openssl-dev libicu-dev logrotate rsync \
-	python-docutils pkg-config cmake git-core \
+	python-docutils pkg-config cmake libexpat1-dev gettext libz-dev libssl-dev \
+	libmysqlclient-dev emacs apt-utils \
+	&& sudo apt-get remove -y git-core \
+	&& cd /tmp \
+	&& curl --remote-name --progress https://www.kernel.org/pub/software/scm/git/git-2.14.3.tar.gz \
+	&& echo '023ffff6d3ba8a1bea779dfecc0ed0bb4ad68ab8601d14435dd8c08416f78d7f  git-2.14.3.tar.gz' | shasum -a256 -c - && tar -xzf git-2.14.3.tar.gz \
+	&& cd git-2.14.3/ \
+	&& ./configure\
+	&& make prefix=/usr/local all \
+	&& sudo make prefix=/usr/local install \
 	&& bash -c "debconf-set-selections <<< \"postfix postfix/mailname string localhost\"" \
 	&& bash -c "debconf-set-selections <<< \"postfix postfix/main_mailer_type string 'Internet Site'\"" \
 	&& apt-get install -y postfix
@@ -42,6 +51,60 @@ RUN sudo -u git -H git clone https://gitlab.com/gitlab-org/gitlab-ce.git -b 10-5
 
 WORKDIR /home/git/gitlab
 RUN sudo -u git -H cp  config/gitlab.yml.example config/gitlab.yml
+RUN apt-get install -y emacs
+RUN sed -i '/    host: localhost/c\    host: 0.0.0.0' config/gitlab.yml \
+	&& sed -i '/    # email_enabled: true/c\    email_enabled: false' config/gitlab.yml \
+	&& sed -i '/    bin_path: \/usr\/bin\/git/c\    bin_path: \/usr\/local\/bin\/git' config/gitlab.yml
+
+RUN sudo -u git -H cp config/secrets.yml.example config/secrets.yml \
+	&& sudo -u git -H chmod 0600 config/secrets.yml \
+	&& sudo chown -R git log/ \
+	&& sudo chown -R git tmp/ \
+	&& sudo chmod -R u+rwX,go-w log/ \
+	&& sudo chmod -R u+rwX tmp/ \
+	&& sudo chmod -R u+rwX tmp/pids/ \
+	&& sudo chmod -R u+rwX tmp/sockets/ \
+	&& sudo -u git -H mkdir public/uploads/ \
+	&& sudo chmod 0700 public/uploads \
+	&& sudo chmod -R u+rwX builds/ \
+	&& sudo chmod -R u+rwX shared/artifacts/ \
+	&& sudo chmod -R ug+rwX shared/pages/ \
+	&& sudo -u git -H cp config/unicorn.rb.example config/unicorn.rb \
+	&& sudo -u git -H cp config/initializers/rack_attack.rb.example config/initializers/rack_attack.rb \
+	&& sudo -u git -H git config --global core.autocrlf input \
+	&& sudo -u git -H git config --global gc.auto 0 \
+	&& sudo -u git -H git config --global repack.writeBitmaps true \
+	&& sudo -u git -H git config --global receive.advertisePushOptions true \
+	&& sudo -u git -H cp config/resque.yml.example config/resque.yml \
+	&& sed -i '/  url: redis:\/\/localhost:6379/c\  url: redis:\/\/gitlab:6379' config/resque.yml \
+	&& sed -i '/  url: unix:\/var\/run\/redis\/redis.sock/c\  url: redis:\/\/gitlab:6379' config/resque.yml \
+	&& sudo -u git -H cp config/database.yml.mysql config/database.yml \
+	&& sed -i '/  password: "secure password"/c\  password: "gitlabpwd"' config/database.yml \
+	&& sed -i '/  database: gitlabhq_staging/c\  database: gitlab' config/database.yml \
+	&& sed -i '/  host: localhost/c\  host: db' config/database.yml \
+	&& sed -i '/  database: gitlabhq_test/c\  database: gitlab' config/database.yml \
+	&& sed -i '/  password:/c\  password: "gitlabpwd"' config/database.yml
+
+RUN sudo -u git -H bundle install --deployment --without development test postgres aws kerberos
+RUN sudo -u git -H bundle exec rake gitlab:shell:install REDIS_URL=redis:redis RAILS_ENV=production SKIP_STORAGE_VALIDATION=true
+RUN sudo -u git -H bundle exec rake "gitlab:workhorse:install[/home/git/gitlab-workhorse]" RAILS_ENV=production \
+	&& sudo -u git -H bundle exec rake gitlab:setup RAILS_ENV=production
+RUN sudo -u git -H bundle exec rake gitlab:setup RAILS_ENV=production GITLAB_ROOT_PASSWORD=mypassword GITLAB_ROOT_EMAIL=vmonteco@student.42.fr \
+	&& sudo cp lib/support/init.d/gitlab /etc/init.d/gitlab \
+	&& sudo -u git -H bundle exec rake "gitlab:gitaly:install[/home/git/gitaly]" RAILS_ENV=production
+RUN sudo chmod 0700 /home/git/gitlab/tmp/sockets/private \
+	&& sudo chown git /home/git/gitlab/tmp/sockets/private \
+	&& sudo cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab \
+	&& sudo -u git -H bundle exec rake gitlab:env:info RAILS_ENV=production \
+	&& sudo -u git -H bundle exec rake gettext:compile RAILS_ENV=production \
+	&& sudo -u git -H yarn install --production --pure-lockfile \
+	&& sudo -u git -H bundle exec rake gitlab:assets:compile RAILS_ENV=production NODE_ENV=production
+
+
+
+
+	
+	
 
 # MAINTAINER <vmonteco@student.42.fr>
 

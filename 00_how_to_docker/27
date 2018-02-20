@@ -1,3 +1,4 @@
 #!/usr/bin/env sh
 
-docker logs -f $(docker service ps engineering-bay | grep Running | head -n 1 | awk '{print $1}')
+docker service logs -f $(docker service ps -q engineering-bay | head -n 1)
+

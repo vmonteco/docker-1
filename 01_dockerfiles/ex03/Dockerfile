@@ -95,12 +95,45 @@ RUN sudo -u git -H git clone https://gitlab.com/gitlab-org/gitlab-ce.git -b 10-5
 WORKDIR /home/git/gitlab
 
 RUN sudo -u git -H cp config/gitlab.yml.example config/gitlab.yml \
-	&& sed -i '//c\/' config/gitlab.yml
+	&& sed -i '/    bin_path: \/usr\/bin\/git/c\    bin_path: \/usr\/local\/bin\/git/' config/gitlab.yml \
+	&& sed -i '/    email_reply_to: noreply@example.com/c\    email_reply_to: noreply@localhost/' config/gitlab.yml \
+	&& sudo -u git -H cp config/secrets.yml.example config/secrets.yml \
+	&& sudo -u git -H chmod 0600 config/secrets.yml \
+	&& sudo chown -R git log/ \
+	&& sudo chown -R git tmp/ \
+	&& sudo chmod -R u+rwX,go-w log/ \
+	&& sudo chmod -R u+rwX tmp/ \
+	&& sudo chmod -R u+rwX tmp/pids/ \
+	&& sudo chmod -R u+rwX tmp/sockets/ \
+	&& sudo -u git -H mkdir public/uploads/ \
+	&& sudo chmod 0700 public/uploads \
+	&& sudo chmod -R u+rwX builds/ \
+	&& sudo chmod -R u+rwX shared/artifacts/ \
+	&& sudo chmod -R ug+rwX shared/pages/ \
+	&& sudo -u git -H cp config/unicorn.rb.example config/unicorn.rb \
+	&& sudo -u git -H cp config/initializers/rack_attack.rb.example config/initializers/rack_attack.rb \
+	&& sudo -u git -H git config --global core.autocrlf input \
+	&& sudo -u git -H git config --global gc.auto 0 \
+	&& sudo -u git -H git config --global repack.writeBitmaps true \
+	&& sudo -u git -H git config --global receive.advertisePushOptions true \
+	&& sudo -u git -H cp config/resque.yml.example config/resque.yml \
+	&& sed -i '/  url: unix:\/var\/run\/redis\/redis.sock/c\  url: redis:\/\/redis:6379/' config/resque.yml \
+	&& sudo -u git cp config/database.yml.postgresql config/database.yml \
+	&& sudo -u git -H chmod o-rwx config/database.yml
 
+#
+#   INSTALL DB DEPENDENCIES
+#
 
-# && sudo -u git -H editor config/gitlab.yml \
-# 	&& sudo -u git -H cp config/secrets.yml.example config/secrets.yml \
-# 	&& sudo -u git -H chmod 0600 config/secrets.yml
+RUN sudo apt-get install -y postgresql-client libpq-dev postgresql-contrib
+
+#
+#   INSTALL WITH BUNDLE
+#
+
+RUN sudo -u git -H bundle install --deployment --without development test mysql aws kerberos
+	
+RUN sudo -u git -H bundle exec rake "gitlab:workhorse:install[/home/git/gitlab-workhorse]" RAILS_ENV=production
 
 
 

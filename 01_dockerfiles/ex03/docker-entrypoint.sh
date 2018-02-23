@@ -1,5 +1,26 @@
 #!/usr/bin/env bash
 
+#
+#   INIT DB
+#
+
+sudo -u postgres service postgresql start
+sudo -u postgres psql -d template1 -c "CREATE USER git CREATEDB;"
+sudo -u postgres psql -d template1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+sudo -u postgres psql -d template1 -c "CREATE DATABASE gitlabhq_production OWNER git;"
+
+#
+#   REDIS START
+#
+
+sudo service redis-server restart
+
+#
+#   BUNDLE INSTALL
+#
+
+#sudo -u git -H bundle install --deployment --without development test mysql aws kerberos
+
 # Steps to add :
 # 1- Update DB conf (config/database.yml)
 #    - database name

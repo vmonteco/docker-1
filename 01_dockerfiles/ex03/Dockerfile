@@ -88,7 +88,7 @@ RUN rm -rf /usr/local/go \
 #
 
 
-RUN curl --location https://deb.nodesource.com/setup_7.x | sudo bash - \
+RUN curl --location https://deb.nodesource.com/setup_8.x | sudo bash - \
 	&& sudo apt-get install -y nodejs \
 	&& curl --silent --show-error https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
 	&& echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list \
@@ -113,6 +113,7 @@ RUN apt-get install -y postgresql postgresql-client libpq-dev postgresql-contrib
 	&& service postgresql start \
 	&& sudo -u postgres psql -d template1 -c "CREATE USER git CREATEDB;" \
 	&& sudo -u postgres psql -d template1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;" \
+		&& sudo -u postgres psql -d template1 -c "ALTER USER \"git\" WITH PASSWORD 'password';" \
 	&& sudo -u postgres psql -d template1 -c "CREATE DATABASE gitlabhq_production OWNER git;"
 
 
@@ -181,7 +182,9 @@ RUN sudo -u git -H cp config/gitlab.yml.example config/gitlab.yml \
 #
 
 RUN sudo -u git cp config/database.yml.postgresql config/database.yml \
-	&& sudo -u git -H chmod o-rwx config/database.yml
+	&& sudo -u git -H chmod o-rwx config/database.yml \
+	&& sed -i '/  password: "secure password"/c\  password: "password"' config/database.yml \
+	&& cat -e config/database.yml
 
 #
 #   INSTALL GEMS WITH BUNDLE
@@ -195,14 +198,80 @@ RUN sudo -u git -H bundle install --deployment --without development test mysql 
 
 RUN sudo -u git -H bundle exec rake gitlab:shell:install REDIS_URL=unix:/var/run/redis/redis.sock RAILS_ENV=production SKIP_STORAGE_VALIDATION=true
 
-#RUN sudo -u git -H bundle exec rake "gitlab:workhorse:install[/home/git/gitlab-workhorse]" RAILS_ENV=production
+#
+#   INSTALL GITLAB-WORKHORSE
+#
+
+RUN sudo -u git -H bundle exec rake "gitlab:workhorse:install[/home/git/gitlab-workhorse]" RAILS_ENV=production
 
 
+#
+#   INITIALIZE DB AND ACTIVATE ADVANCED FEATURES
+#
+
+RUN service postgresql restart && service redis-server restart && yes yes | sudo -u git -H bundle exec rake gitlab:setup RAILS_ENV=production
+
+#
+#   INSTALL INIT SCRIPT
+#
+
+RUN cp lib/support/init.d/gitlab /etc/init.d/gitlab \
+	&& update-rc.d gitlab defaults 21
+
+#
+#   INSTALL GITALY
+#
+
+RUN sudo -u git -H bundle exec rake "gitlab:gitaly:install[/home/git/gitaly]" RAILS_ENV=production
+
+RUN chmod 0700 /home/git/gitlab/tmp/sockets/private \
+	&& chown git /home/git/gitlab/tmp/sockets/private
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-EXPOSE 80 22
+#
+#   SETUP LOGROTATE
+#
+
+RUN cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
+
+#
+#   CHECK APPLICATION STATUS
+#
+
+RUN service postgresql restart && sudo -u git -H bundle exec rake gitlab:env:info RAILS_ENV=production
+
+#
+#   COMPILE GETTEXT PO FILES
+#
+
+RUN sudo -u git -H bundle exec rake gettext:compile RAILS_ENV=production
+
+#
+#   COMPIEL ASSETS
+#
+
+RUN sudo -u git -H yarn install --production --pure-lockfile \
+	&& sudo -u git -H bundle exec rake gitlab:assets:compile RAILS_ENV=production NODE_ENV=production
+
+#
+#   START GITLAB INSTANCE
+#
+
+RUN sudo service gitlab start
+
+#
+#   NGINX
+#
+
+RUN apt-get install -y nginx \
+	&& cp lib/support/nginx/gitlab /etc/nginx/sites-available/gitlab \
+	&& ln -s /etc/nginx/sites-available/gitlab /etc/nginx/sites-enabled/gitlab \
+	&& rm -f /etc/nginx/sites-enabled/default 
+#&& service nginx start
+
+EXPOSE 80 22 5432
 
 VOLUME /var/lib/postgresql/9.5/main
 

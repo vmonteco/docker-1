@@ -5,25 +5,24 @@ FROM debian
 #
 
 RUN apt-get update -y \
-	&& apt-get upgrade -y
-
-RUN apt-get install -y sudo \
+	&& apt-get upgrade -y \
+	&& apt-get install -y sudo \
 	build-essential zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libre2-dev \
 	libreadline-dev libncurses5-dev libffi-dev curl openssh-server checkinstall \
 	libxml2-dev libxslt-dev libcurl4-openssl-dev libicu-dev logrotate rsync \
-	python-docutils pkg-config cmake
+	python-docutils pkg-config cmake git-core
 
 #
 #   FOR DEV PURPOSE
 #
 
-RUN apt-get install -y emacs
+#RUN apt-get install -y emacs
 
 #
 #   ENSURE THAT WE HAVE THE RIGHT GIT VERSION
 #
 
-RUN apt-get install -y git-core
+#RUN apt-get install -y git-core
 
 #
 #   INSTALL POSTFIX

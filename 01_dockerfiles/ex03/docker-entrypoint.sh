@@ -1,14 +1,8 @@
 #!/usr/bin/env bash
 
 function entrypoint() {
-	if [ -z ${SSH_PORT} ]
-	then
-	   sed -i "/    # ssh_port: 22/c\    ssh_port: $SSH_PORT" /home/git/gitlab/config/gitlab.yml
-	fi
-	if [ -z ${GITLAB_HOST} ]
-	then
-	   sed -i "/    host: localhost/c\    host: $GITLAB_HOST" /home/git/gitlab/config/gitlab.yml
-	fi
+	sed -i "/    # ssh_port: 22/c\    ssh_port: ${SSH_PORT:-22}" /home/git/gitlab/config/gitlab.yml
+	sed -i "/    host: localhost/c\    host: ${GITLAB_HOST:-localhost}" /home/git/gitlab/config/gitlab.yml
 	service gitlab start &
 	service redis-server restart
 	service postgresql restart

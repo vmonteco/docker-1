@@ -227,8 +227,8 @@ RUN sudo -u git -H bundle exec rake "gitlab:gitaly:install[/home/git/gitaly]" RA
 RUN chmod 0700 /home/git/gitlab/tmp/sockets/private \
 	&& chown git /home/git/gitlab/tmp/sockets/private
 
-#COPY docker-entrypoint.sh /docker-entrypoint.sh
-#RUN chmod +x /docker-entrypoint.sh
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 #
 #   SETUP LOGROTATE
@@ -265,8 +265,11 @@ RUN sudo service gitlab start
 #   NGINX
 #
 
-RUN apt-get install -y nginx \
-	&& cp lib/support/nginx/gitlab /etc/nginx/sites-available/gitlab \
+COPY gitlab /etc/nginx/sites-available/gitlab
+
+#&& cp lib/support/nginx/gitlab /etc/nginx/sites-available/gitlab \
+
+RUN apt-get install -y nginx \	
 	&& ln -s /etc/nginx/sites-available/gitlab /etc/nginx/sites-enabled/gitlab \
 	&& rm -f /etc/nginx/sites-enabled/default 
 
@@ -274,6 +277,8 @@ EXPOSE 80 22
 
 VOLUME /var/lib/postgresql/9.5/main
 
-#ENTRYPOINT /docker-entrypoint.sh
+#ENTRYPOINT bash
+ENTRYPOINT /docker-entrypoint.sh
 
-CMD ["service", "redis-server", "restart", "&&", "service", "postgresql", "restart", "&&", "service", "gitlab", "restart", "&&", "nginx", "-g", "daemon off;"]
+#CMD ["bash", "b/docker-entrypoint.sh"]
+#CMD ["service", "redis-server", "restart", "&&", "service", "postgresql", "restart", "&&", "service", "gitlab", "restart", "&&", "nginx", "-g", "daemon", "off;"]

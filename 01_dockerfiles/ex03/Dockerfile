@@ -25,16 +25,6 @@ RUN apt-get install -y emacs
 
 RUN apt-get install -y git-core
 
-# RUN apt-get remove -y git-core \
-# 	&& apt-get install -y libexpat1-dev gettext libz-dev \
-# 	&& cd /tmp \
-# 	&& curl --remote-name --progress https://www.kernel.org/pub/software/scm/git/git-2.14.3.tar.gz \
-# 	&& echo '023ffff6d3ba8a1bea779dfecc0ed0bb4ad68ab8601d14435dd8c08416f78d7f  git-2.14.3.tar.gz' | shasum -a256 -c - && tar -xzf git-2.14.3.tar.gz \
-# 	&& cd git-2.14.3/ \
-# 	&& ./configure \
-# 	&& make prefix=/usr/local all \
-# 	&& make prefix=/usr/local install
-
 #
 #   INSTALL POSTFIX
 #
@@ -47,9 +37,6 @@ RUN bash -c "debconf-set-selections <<< \"postfix postfix/mailname string localh
 #   2 - INSTALL RUBY
 #
 
-
-# 2.4.3 sans le sha
-
 RUN apt-get remove -y ruby1.8 \
 	&& mkdir /tmp/ruby && cd /tmp/ruby \
 	&& curl --remote-name --progress https://cache.ruby-lang.org/pub/ruby/2.4/ruby-2.4.3.tar.gz \
@@ -59,16 +46,6 @@ RUN apt-get remove -y ruby1.8 \
 	&& make \
 	&& make install \
 	&& gem install bundler --no-ri --no-rdoc
-
-# RUN mkdir /tmp/ruby && cd /tmp/ruby \
-# 	&& sudo apt-get -y install zlib1g-dev libssl-dev libreadline-dev libgdbm-dev openssl wget \
-# 	&& wget http://cache.ruby-lang.org/pub/ruby/2.4/ruby-2.4.3.tar.gz \
-# 	&& tar xvfz ruby-2.4.3.tar.gz \
-# 	&& cd ruby-2.4.3 \
-# 	&& ./configure \
-# 	&& make \
-# 	&& sudo make install \
-# 	&& gem install bundler --no-ri --no-rdoc
 
 #
 #   3 - INSTALL GO
@@ -276,9 +253,7 @@ RUN apt-get install -y nginx \
 EXPOSE 80 22
 
 VOLUME /var/lib/postgresql/9.5/main
+VOLUME /home/git/repositories
 
-#ENTRYPOINT bash
 ENTRYPOINT /docker-entrypoint.sh
 
-#CMD ["bash", "b/docker-entrypoint.sh"]
-#CMD ["service", "redis-server", "restart", "&&", "service", "postgresql", "restart", "&&", "service", "gitlab", "restart", "&&", "nginx", "-g", "daemon", "off;"]

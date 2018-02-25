@@ -1,3 +1,4 @@
+
 FROM golang:alpine
 MAINTAINER <vmonteco@student.42.fr>
 
@@ -21,7 +22,6 @@ RUN chmod -Rv 700 $GOPATH/src/github.com/gogits/gogs/custom
 RUN setcap 'cap_net_bind_service=+ep' $GOPATH/src/github.com/gogits/gogs/gogs
 USER git
 # app.ini $GOPATH/src/github.com/gogits/gogs/custom/conf/app.ini
-EXPOSE 3000
-EXPOSE 22
+EXPOSE 3000 22
 CMD ["./gogs", "web"]
 #CMD ["bash"]

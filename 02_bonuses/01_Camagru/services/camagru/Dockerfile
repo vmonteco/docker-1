@@ -27,7 +27,7 @@ RUN sed -i '/;listen.mode = 0660/c\listen.mode = 0777' /usr/local/etc/php-fpm.d/
 # Set ssmtp.conf :
 RUN sed -i '/root=postmaster/c\root=contact@vmonteco.ninja' /etc/ssmtp/ssmtp.conf \
 	&& echo "AuthUser=contact@vmonteco.ninja" >> /etc/ssmtp/ssmtp.conf \
-	&& echo "AuthPass=42born2code" >> /etc/ssmtp/ssmtp.conf \
+	&& echo "AuthPass=macaroni31" >> /etc/ssmtp/ssmtp.conf \
 	&& echo "mailhub=auth.smtp.1and1.fr:25" >> /etc/ssmtp/ssmtp.conf \
 	&& echo "rewriteDomain=vmonteco.ninja" >> /etc/ssmtp/ssmtp.conf \
 	&& echo "#UseTLS=YES" >> /etc/ssmtp/ssmtp.conf

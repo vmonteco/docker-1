@@ -17,8 +17,8 @@ services:
       - gogs_git:/srv/git
       - gogs_logs:/go/src/github.com/gogits/gogs/log
     ports:
-      - "10022:22"
-      - "10080:3000"
+      - "10023:22"
+      - "10081:3000"
     depends_on:
       - db
     stdin_open: true
